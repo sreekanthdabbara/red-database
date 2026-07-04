@@ -1,7 +1,7 @@
 .navbar {
   display: flex;
   align-items: center;
-  background: var(--navy);
+  background: #8B0000;
   color: var(--white);
   padding: 0 24px;
   height: 64px;
@@ -78,8 +78,8 @@
 .navbar__link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 
 .navbar__link--active {
-  color: var(--teal) !important;
-  border-bottom: 2px solid var(--teal);
+  color: #ffaaaa !important;
+  border-bottom: 2px solid #ffaaaa;
   border-radius: 0;
 }
 
