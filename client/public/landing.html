@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REED — Rare Disease Epidemiology Database</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --ink:       #0D1117;
+      --ink-60:    #6B7280;
+      --ink-20:    #E8EAF0;
+      --surface:   #F7F8FA;
+      --white:     #FFFFFF;
+      --teal:      #0F7B6C;
+      --teal-mid:  #18A092;
+      --teal-pale: #E6F4F2;
+      --gold:      #C9924A;
+      --gold-pale: #FBF3E8;
+      --signal:    #E8394A;
+      --radius-sm: 4px;
+      --radius:    10px;
+      --radius-lg: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--ink-20);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 64px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      width: 36px;
+      height: 36px;
+      background: var(--teal);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-logo-mark svg { width: 20px; height: 20px; }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--ink-60);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .nav-links a:hover { color: var(--teal); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.55rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all .2s;
+    }
+
+    .btn-primary {
+      background: var(--teal);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: var(--teal-mid); transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--teal);
+      border: 1.5px solid var(--teal);
+    }
+    .btn-ghost:hover { background: var(--teal-pale); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 88vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 4rem;
+      padding: 5rem 5% 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Signature element: an animated "data lattice" on the right */
+    .hero::before {
+      content: '';
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle at 60% 40%, var(--teal-pale) 0%, transparent 65%),
+                  radial-gradient(circle at 30% 80%, var(--gold-pale) 0%, transparent 55%);
+      border-radius: 50%;
+      z-index: 0;
+      animation: breathe 8s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1) translate(0,0); }
+      50% { transform: scale(1.04) translate(-10px, 10px); }
+    }
+
+    .hero-copy { position: relative; z-index: 1; }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: var(--teal-pale);
+      border: 1px solid rgba(15,123,108,.2);
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      line-height: 1.1;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--teal);
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--ink-60);
+      margin: 1.5rem 0 2.5rem;
+      max-width: 500px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-visual {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Stats card in hero */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--ink-20);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.5rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .25s, transform .25s;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 8px 28px rgba(0,0,0,.08);
+      transform: translateY(-3px);
+    }
+
+    .stat-card.accent { border-color: var(--teal); }
+    .stat-card.accent::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--teal);
+    }
+
+    .stat-card.gold { border-color: var(--gold); }
+    .stat-card.gold::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+    }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.6rem;
+      line-height: 1;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-num span { color: var(--teal); }
+    .stat-num.gold-num span { color: var(--gold); }
+
+    .stat-label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink-60);
+      line-height: 1.4;
+    }
+
+    .stat-icon {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      width: 28px; height: 28px;
+      opacity: .12;
+    }
+
+    /* ── WHAT IS REED ── */
+    .section {
+      padding: 6rem 5%;
+    }
+
+    .section-alt { background: var(--surface); }
+
+    .section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 4rem;
+    }
+
+    .section-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 1rem;
+    }
+
+    .section-body {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--ink-60);
+    }
+
+    /* ── HOW IT'S BUILT ── */
+    .build-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .build-track {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .build-step {
+      display: flex;
+      gap: 1.25rem;
+      position: relative;
+      padding-bottom: 2rem;
+    }
+
+    .build-step:last-child { padding-bottom: 0; }
+
+    .build-step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 40px;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--teal-pale), transparent);
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--teal);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--teal);
+    }
+
+    .step-content h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.4rem;
+    }
+
+    .step-content p {
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--ink-60);
+    }
+
+    /* Machine/Human pill labels */
+    .pill-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .pill-machine {
+      background: var(--teal);
+      color: white;
+    }
+
+    .pill-human {
+      background: var(--gold);
+      color: white;
+    }
+
+    /* Visual: abstract grid art for the "build" section */
+    .build-art {
+      background: var(--ink);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .build-art-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--teal-mid);
+      margin-bottom: 1.5rem;
+    }
+
+    .build-art-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .cell {
+      height: 28px;
+      border-radius: 3px;
+      flex: 1;
+      animation: flicker 4s ease-in-out infinite;
+    }
+
+    .cell-teal  { background: var(--teal); }
+    .cell-teal-d{ background: #0a4d42; }
+    .cell-gold  { background: var(--gold); }
+    .cell-blank { background: #1c2533; }
+    .cell-sig   { background: var(--signal); }
+
+    @keyframes flicker {
+      0%, 90%, 100% { opacity: 1; }
+      95% { opacity: .5; }
+    }
+
+    .cell:nth-child(odd)  { animation-delay: .3s; }
+    .cell:nth-child(even) { animation-delay: .9s; }
+
+    .build-art-legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: #6B7280;
+    }
+
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+    }
+
+    /* ── VALUE PROPS ── */
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .value-card {
+      background: var(--white);
+      border: 1px solid var(--ink-20);
+      border-radius: var(--radius);
+      padding: 2rem 1.75rem;
+      transition: box-shadow .25s, transform .25s;
+    }
+
+    .value-card:hover {
+      box-shadow: 0 10px 30px rgba(0,0,0,.07);
+      transform: translateY(-4px);
+    }
+
+    .value-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--teal-pale);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .value-icon svg { width: 22px; height: 22px; stroke: var(--teal); }
+
+    .value-card h4 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+
+    .value-card p {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--ink-60);
+    }
+
+    /* ── WHO WE SERVE ── */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .audience-card {
+      background: var(--white);
+      border: 1px solid var(--ink-20);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all .25s;
+    }
+
+    .audience-card:hover {
+      border-color: var(--teal);
+      background: var(--teal-pale);
+      transform: translateY(-3px);
+    }
+
+    .audience-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.4rem;
+    }
+
+    .audience-card h5 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+
+    .audience-card p {
+      font-size: 0.8rem;
+      color: var(--ink-60);
+      line-height: 1.5;
+    }
+
+    /* ── HOW TO ACCESS ── */
+    .access-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--ink-20);
+      border: 1px solid var(--ink-20);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .access-step {
+      background: var(--white);
+      padding: 2.5rem 2rem;
+      position: relative;
+    }
+
+    .access-step-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 3.5rem;
+      line-height: 1;
+      color: var(--teal-pale);
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+    }
+
+    .access-step h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .access-step p {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--ink-60);
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: var(--ink);
+      color: var(--white);
+      text-align: center;
+      padding: 6rem 5%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 120%, rgba(15,123,108,.35) 0%, transparent 60%);
+    }
+
+    .cta-section > * { position: relative; z-index: 1; }
+
+    .cta-section .section-title { color: var(--white); margin-bottom: 1rem; }
+    .cta-section .section-body  { color: rgba(255,255,255,.65); max-width: 500px; margin: 0 auto 2.5rem; }
+
+    .btn-cta {
+      background: var(--teal-mid);
+      color: var(--white);
+      font-size: 1rem;
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-cta:hover { background: var(--teal); transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--ink-20);
+      padding: 2rem 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    footer .brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      color: var(--ink-60);
+    }
+
+    footer p {
+      font-size: 0.8rem;
+      color: var(--ink-60);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero, .build-grid { grid-template-columns: 1fr; }
+      .value-grid { grid-template-columns: 1fr 1fr; }
+      .audience-grid { grid-template-columns: 1fr 1fr; }
+      .access-steps { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .value-grid, .audience-grid, .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    /* Smooth fade-in on scroll */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white"/>
+        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity=".6"/>
+        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity=".6"/>
+        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity=".3"/>
+      </svg>
+    </div>
+    REED
+  </a>
+  <ul class="nav-links">
+    <li><a href="#what">What is REED</a></li>
+    <li><a href="#how">How it's built</a></li>
+    <li><a href="#value">Why REED</a></li>
+    <li><a href="#who">Who we serve</a></li>
+    <li><a href="/login">Access</a></li>
+  </ul>
+  <a href="#cta" class="btn btn-primary">Request Demo</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-copy fade-in">
+    <div class="hero-eyebrow">Rare Disease Epidemiology Database</div>
+    <h1>Stop searching.<br><em>Start deciding.</em></h1>
+    <p class="hero-sub">
+      A single source of truth for rare disease epidemiology evidence—
+      built from human expertise and machine precision, so your teams
+      spend time on insight, not hunting for data.
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn btn-primary">Request a Demo →</a>
+      <a href="#what" class="btn btn-ghost">Learn more</a>
+    </div>
+  </div>
+
+  <div class="hero-visual fade-in" style="transition-delay:.15s">
+    <div class="stats-grid">
+      <div class="stat-card accent">
+        <div class="stat-num"><span>300</span>+</div>
+        <div class="stat-label">Rare diseases covered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><span style="color:var(--ink)">50</span>+</div>
+        <div class="stat-label">Countries represented</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-num gold-num"><span>100%</span></div>
+        <div class="stat-label">Source-linked estimates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><span style="color:var(--ink)">∞</span></div>
+        <div class="stat-label">Regularly refreshed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS REED -->
+<section class="section section-alt" id="what">
+  <div class="section-header fade-in">
+    <p class="section-tag">What is REED</p>
+    <h2 class="section-title">One database. Every epidemiology answer.</h2>
+    <p class="section-body">
+      REED consolidates published and public-domain epidemiology evidence into a curated,
+      traceable, and regularly refreshed database. Each estimate links directly to its
+      original source—so you can review context, methodology, and definitions with one click,
+      and make decisions you can defend.
+    </p>
+  </div>
+</section>
+
+<!-- HOW IT'S BUILT -->
+<section class="section" id="how">
+  <div class="build-grid">
+    <div class="fade-in">
+      <p class="section-tag">How REED is built</p>
+      <h2 class="section-title" style="text-align:left; margin-bottom:1rem;">Man + Machine collaboration</h2>
+      <p class="section-body" style="text-align:left; margin-bottom:2rem;">
+        Every record in REED is the product of systematic machine retrieval validated
+        by domain experts—combining the scale of AI with the judgment of epidemiology researchers.
+      </p>
+
+      <div class="pill-row">
+        <span class="pill pill-machine">⚙ Machine</span>
+        <span class="pill pill-human">👤 Human</span>
+      </div>
+
+      <div class="build-track">
+        <div class="build-step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h4>Automated literature retrieval <span class="pill pill-machine" style="font-size:.72rem;padding:3px 8px;">Machine</span></h4>
+            <p>Systematic crawls across PubMed, Embase, government health portals, and registry databases surface every relevant publication.</p>
+          </div>
+        </div>
+        <div class="build-step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h4>AI-assisted data extraction <span class="pill pill-machine" style="font-size:.72rem;padding:3px 8px;">Machine</span></h4>
+            <p>Structured extraction pulls epidemiological estimates, study populations, geographies, and endpoints from each source.</p>
+          </div>
+        </div>
+        <div class="build-step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h4>Expert quality curation <span class="pill pill-human" style="font-size:.72rem;padding:3px 8px;">Human</span></h4>
+            <p>Epidemiology specialists validate entries, resolve conflicts, and flag methodological nuances no algorithm would catch.</p>
+          </div>
+        </div>
+        <div class="build-step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h4>Traceable, refreshed database <span class="pill pill-machine" style="font-size:.72rem;padding:3px 8px;">Machine</span> <span class="pill pill-human" style="font-size:.72rem;padding:3px 8px;">Human</span></h4>
+            <p>Every estimate is linked to its source with continuous refresh cycles to keep REED current as evidence evolves.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-art fade-in" style="transition-delay:.2s">
+      <div class="build-art-title">// Evidence coverage matrix</div>
+      <div class="build-art-row">
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-gold"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal-d"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-gold"></div>
+        <div class="cell cell-teal"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-gold"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-gold"></div>
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-teal"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-blank"></div>
+      </div>
+      <div class="build-art-row">
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal-d"></div>
+        <div class="cell cell-gold"></div>
+        <div class="cell cell-blank"></div>
+        <div class="cell cell-teal"></div>
+        <div class="cell cell-teal"></div>
+      </div>
+      <div class="build-art-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--teal)"></div>
+          Verified source
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--gold)"></div>
+          Expert validated
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#1c2533"></div>
+          Gap identified
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUE PROPS -->
+<section class="section section-alt" id="value">
+  <div class="section-header fade-in">
+    <p class="section-tag">What makes REED different</p>
+    <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+  </div>
+
+  <div class="value-grid">
+    <div class="value-card fade-in">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M2 12h4M18 12h4M12 2v4M12 18v4"/>
+        </svg>
+      </div>
+      <h4>Global coverage in one place</h4>
+      <p>Epidemiology data from 50+ countries across all continents, consolidated so you stop stitching together data from a dozen sources.</p>
+    </div>
+    <div class="value-card fade-in" style="transition-delay:.1s">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V7l-4-4h-6z"/>
+          <path d="M14 3v4h4M8 13h8M8 17h5"/>
+        </svg>
+      </div>
+      <h4>Source-linked estimates</h4>
+      <p>Every number traces back to its primary publication. Review definitions, methodology, and study population in two clicks—no detective work.</p>
+    </div>
+    <div class="value-card fade-in" style="transition-delay:.2s">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <h4>Regularly refreshed</h4>
+      <p>Automated monitoring ensures new publications surface quickly. The data you access today reflects the current state of evidence, not last year's snapshot.</p>
+    </div>
+    <div class="value-card fade-in" style="transition-delay:.05s">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+        </svg>
+      </div>
+      <h4>Curated, not just collected</h4>
+      <p>Human epidemiologists review and annotate every record. Quality flags, methodological notes, and confidence grades come built in.</p>
+    </div>
+    <div class="value-card fade-in" style="transition-delay:.15s">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </div>
+      <h4>Disease-level depth</h4>
+      <p>Coverage across 300+ rare diseases with endpoint-level granularity: incidence, prevalence, mortality, diagnosis lag, and patient journey milestones.</p>
+    </div>
+    <div class="value-card fade-in" style="transition-delay:.25s">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      </div>
+      <h4>Cross-industry ready</h4>
+      <p>Structured for life sciences, medtech, biotech, academic research, CROs, and payers—with outputs your team can use directly in submissions or strategy decks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHO WE SERVE -->
+<section class="section" id="who">
+  <div class="section-header fade-in">
+    <p class="section-tag">Who we serve</p>
+    <h2 class="section-title">Built for decision-makers across the evidence ecosystem</h2>
+    <p class="section-body">
+      Whether you're filing a dossier, sizing a market, or building a clinical program,
+      REED gives you the evidence layer you can build on.
+    </p>
+  </div>
+
+  <div class="audience-grid">
+    <div class="audience-card fade-in">
+      <div class="audience-icon">💊</div>
+      <h5>Life Sciences</h5>
+      <p>Evidence for submissions, payer arguments, and commercial sizing</p>
+    </div>
+    <div class="audience-card fade-in" style="transition-delay:.1s">
+      <div class="audience-icon">🧬</div>
+      <h5>Biotech & Medtech</h5>
+      <p>Rare disease landscape scans and competitive epidemiology benchmarking</p>
+    </div>
+    <div class="audience-card fade-in" style="transition-delay:.15s">
+      <div class="audience-icon">🎓</div>
+      <h5>Academic Research</h5>
+      <p>Validated literature base for systematic reviews and meta-analyses</p>
+    </div>
+    <div class="audience-card fade-in" style="transition-delay:.2s">
+      <div class="audience-icon">🏥</div>
+      <h5>CROs & Payers</h5>
+      <p>Rapid access to epidemiology baselines for protocol design and coverage decisions</p>
+    </div>
+  </div>
+</section>
+
+<!-- ACCESS -->
+<section class="section section-alt" id="access">
+  <div class="section-header fade-in">
+    <p class="section-tag">Getting started</p>
+    <h2 class="section-title">Access REED in three steps</h2>
+  </div>
+
+  <div class="access-steps fade-in">
+    <div class="access-step">
+      <div class="access-step-num">01</div>
+      <h4>Request access</h4>
+      <p>Tell us about your disease areas and decision-making needs. We'll set up your account with the coverage that matters most to you.</p>
+    </div>
+    <div class="access-step">
+      <div class="access-step-num">02</div>
+      <h4>Guided walkthrough</h4>
+      <p>A REED specialist walks you through filtering, source tracing, and exporting data—so your team is productive from day one.</p>
+    </div>
+    <div class="access-step">
+      <div class="access-step-num">03</div>
+      <h4>Start deciding</h4>
+      <p>Query across 300+ diseases, export evidence tables, and link every estimate to its primary source—all from one platform.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <p class="section-tag" style="color:var(--teal-mid)">Ready to explore REED?</p>
+  <h2 class="section-title">Your rare disease evidence base starts here</h2>
+  <p class="section-body">
+    Request a guided walkthrough to see how REED supports your epidemiology evidence needs—from disease sizing to regulatory submissions.
+  </p>
+  <a href="#" class="btn btn-cta">Request a guided walkthrough →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="brand">REED</div>
+  <p>© 2025 Rare Disease Epidemiology Database. All rights reserved.</p>
+  <p style="font-size:0.8rem; color:var(--ink-60)">Built with Human + Machine collaboration</p>
+</footer>
+
+<script>
+  // Scroll-triggered fade-in
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } }),
+    { threshold: 0.12 }
+  );
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

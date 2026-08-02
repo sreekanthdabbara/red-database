@@ -1,3 +1,4 @@
+import Landing from './pages/Landing';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -7,6 +8,7 @@ import Login from './pages/Login';
 import PrevalenceIncidence from './pages/PrevalenceIncidence';
 import { Definitions, Mortality, WorldPopulation, Contact } from './pages/OtherPages';
 import './styles/global.css';
+
 
 function Layout({ children }) {
   return (
@@ -53,8 +55,7 @@ export default function App() {
           } />
 
           {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/prevalence" replace />} />
-          <Route path="*" element={<Navigate to="/prevalence" replace />} />
+          <Route path="/" element={<Landing />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
