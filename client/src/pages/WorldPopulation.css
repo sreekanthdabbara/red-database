@@ -1,0 +1,205 @@
+.wp-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 104px);
+  overflow: hidden;
+  background: #F7F8FA;
+}
+
+/* ── Controls ─────────────────────────────────────────────── */
+.wp-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #E8EAF0;
+  flex-wrap: wrap;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.wp-tabs {
+  display: flex;
+  border: 1.5px solid #E8EAF0;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wp-tab {
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  background: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  border-right: 1px solid #E8EAF0;
+}
+
+.wp-tab:last-child { border-right: none; }
+.wp-tab.active { background: #0F7B6C; color: #ffffff; }
+.wp-tab:hover:not(.active) { background: #E6F4F2; color: #0F7B6C; }
+
+/* ── Year range ───────────────────────────────────────────── */
+.wp-year-range {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.wp-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── Body ─────────────────────────────────────────────────── */
+.wp-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.wp-sidebar {
+  width: 190px;
+  flex-shrink: 0;
+  padding: 18px 14px;
+  background: #ffffff;
+  border-right: 1px solid #E8EAF0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+/* ── Main ─────────────────────────────────────────────────── */
+.wp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+/* ── Table base ───────────────────────────────────────────── */
+.wp-main .data-table {
+  width: max-content;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-weight: 400;
+  table-layout: fixed;
+}
+
+.wp-main .data-table th {
+  background: #0D1117;
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: #ffffff;
+  text-transform: none;
+  letter-spacing: 0;
+  position: sticky;
+  top: 0;
+  border-bottom: 2px solid #1f2937;
+  z-index: 1;
+  white-space: nowrap;
+  width: 110px;
+}
+
+.wp-main .data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #E8EAF0;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  cursor: default;
+  width: 110px;
+}
+
+/* ── Alternating rows — all tabs ─────────────────────────── */
+.wp-main .data-table tbody tr:nth-child(even) td { background: #F7F8FA; }
+.wp-main .data-table tbody tr:nth-child(odd) td  { background: #ffffff; }
+.wp-main .data-table tbody tr:hover td           { background: #E6F4F2; }
+
+/* ── Age Group alternating rows ──────────────────────────── */
+.age-table tbody tr:nth-child(even) td { background: #F7F8FA; }
+.age-table tbody tr:nth-child(odd) td  { background: #ffffff; }
+.age-table tbody tr:hover td           { background: #E6F4F2; }
+
+/* ── Data text color ─────────────────────────────────────── */
+.wp-main .data-table td {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* ── Alternating rows ─────────────────────────────────────── */
+.wp-main .data-table tbody tr:nth-child(even) td { background: #F7F8FA; }
+.wp-main .data-table tbody tr:nth-child(odd) td  { background: #ffffff; }
+.wp-main .data-table tbody tr:hover td           { background: #E6F4F2; }
+
+/* ── Fixed columns — first 5 ─────────────────────────────── */
+.wp-main .data-table th:nth-child(1),
+.wp-main .data-table td:nth-child(1) { width: 140px; text-align: left; }
+
+.wp-main .data-table th:nth-child(2),
+.wp-main .data-table td:nth-child(2) { width: 90px;  text-align: left; }
+
+.wp-main .data-table th:nth-child(3),
+.wp-main .data-table td:nth-child(3) { width: 100px; text-align: left; }
+
+.wp-main .data-table th:nth-child(4),
+.wp-main .data-table td:nth-child(4) { width: 100px; text-align: left; }
+
+.wp-main .data-table th:nth-child(5),
+.wp-main .data-table td:nth-child(5) { width: 80px;  text-align: left; }
+
+/* ── Year columns — from 6th onwards ─────────────────────── */
+.wp-main .data-table th:nth-child(n+6),
+.wp-main .data-table td:nth-child(n+6) {
+  width: 110px;
+  text-align: right;
+}
+
+/* ── Negative growth rate ─────────────────────────────────── */
+.negative {
+  color: #E8394A !important;
+  font-weight: 400;
+}
+
+/* ── Age Group table — compact columns ───────────────────── */
+.age-table { table-layout: fixed; }
+
+.age-table th:nth-child(1),
+.age-table td:nth-child(1) { width: 120px; text-align: left; }
+
+.age-table th:nth-child(2),
+.age-table td:nth-child(2) { width: 80px;  text-align: left; }
+
+.age-table th:nth-child(3),
+.age-table td:nth-child(3) { width: 70px;  text-align: left; }
+
+.age-table th:nth-child(4),
+.age-table td:nth-child(4) { width: 80px;  text-align: left; }
+
+.age-table th:nth-child(n+5),
+.age-table td:nth-child(n+5) {
+  width: 60px;
+  text-align: right;
+}
+
+/* ── Age Group alternating rows ──────────────────────────── */
+.age-table tbody tr:nth-child(even) td { background: #F7F8FA; }
+.age-table tbody tr:nth-child(odd) td  { background: #ffffff; }
+.age-table tbody tr:hover td           { background: #E6F4F2; }
+
+.age-table td {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 400;
+}

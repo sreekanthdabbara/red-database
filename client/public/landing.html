@@ -61,17 +61,6 @@
       text-decoration: none;
     }
 
-    .nav-logo-mark {
-      width: 36px;
-      height: 36px;
-      background: var(--teal);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .nav-logo-mark svg { width: 20px; height: 20px; }
 
     .nav-links {
       display: flex;
@@ -79,15 +68,16 @@
       list-style: none;
     }
 
+
     .nav-links a {
-      font-size: 0.9rem;
+      font-size: 14px;
       font-weight: 500;
-      color: var(--ink-60);
+      color: #0D1117;
       text-decoration: none;
-      transition: color .2s;
+      transition: color 0.2s;
     }
 
-    .nav-links a:hover { color: var(--teal); }
+    .nav-links a:hover { color: #0F7B6C; }
 
     .btn {
       display: inline-flex;
@@ -687,15 +677,9 @@
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#">
-    <div class="nav-logo-mark">
-      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white"/>
-        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity=".6"/>
-        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity=".6"/>
-        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity=".3"/>
-      </svg>
-    </div>
-    REED
+    <img src="/logo.png" alt="REED Logo" 
+      style="height: 48px; width: auto; 
+      filter: brightness(0) saturate(100%) invert(35%) sepia(60%) saturate(600%) hue-rotate(130deg) brightness(0.9);" />
   </a>
   <ul class="nav-links">
     <li><a href="#what">What is REED</a></li>

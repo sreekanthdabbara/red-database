@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const NAV_ITEMS = [
-  { label: 'World Population',    to: '/world-population' },
+  { label: 'World Population',     to: '/world-population' },
   { label: 'Prevalence/Incidence', to: '/prevalence' },
-  { label: 'Mortality',           to: '/mortality' },
-  { label: 'Definitions',         to: '/definitions' },
-  { label: 'Contact Us',          to: '/contact' },
+  { label: 'Mortality',            to: '/mortality' },
+  { label: 'Definitions',          to: '/definitions' },
+  { label: 'Contact Us',           to: '/contact' },
 ];
 
 export default function Navbar() {
@@ -26,14 +26,27 @@ export default function Navbar() {
 
   return (
     <header className="navbar">
-      <div className="navbar__brand">
-        <div className="navbar__logo">
-          <img src="/logo.png" alt="RED Logo" style={{ height: '40px', width: 'auto' }} />
+
+      {/* ── Top row: logo + title + avatar ── */}
+      <div className="navbar__top">
+        <div className="navbar__brand">
+          <div className="navbar__logo">
+            <img src="/logo.png" alt="REED Logo" />
+          </div>
+          <div className="navbar__divider" />
+          <span className="navbar__title">Rare Disease Epi Database</span>
         </div>
-        <div className="navbar__divider" />
-        <span className="navbar__title">Rare Disease Epi Database</span>
+
+        <div className="navbar__right">
+          <span className="navbar__version">Latest version 2.0</span>
+          <button className="navbar__avatar" onClick={handleLogout} title="Logout">
+            {initials}
+            <span className="avatar__online" />
+          </button>
+        </div>
       </div>
 
+      {/* ── Bottom row: nav links ── */}
       <nav className="navbar__nav">
         {NAV_ITEMS.map(item => (
           <NavLink
@@ -48,13 +61,6 @@ export default function Navbar() {
         ))}
       </nav>
 
-      <div className="navbar__right">
-        <span className="navbar__version">Latest version 2.0</span>
-        <button className="navbar__avatar" onClick={handleLogout} title="Logout">
-          {initials}
-          <span className="avatar__online" />
-        </button>
-      </div>
     </header>
   );
 }

@@ -7,13 +7,14 @@ const app = express();
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001'],
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
 
 // ── Routes ────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/epi',         require('./routes/epi'));
+app.use('/api/population',  require('./routes/population'));
 app.use('/api/definitions', require('./routes/definitions'));
 
 // Health check

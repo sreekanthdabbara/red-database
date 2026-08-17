@@ -1,30 +1,46 @@
-/* ── CSS Variables ────────────────────────────────────────── */
+/* ── CSS Variables — matched to landing page ──────────────── */
 :root {
-  --teal:        #0ea5a0;
-  --teal-dark:   #0b8a86;
-  --teal-light:  #e6f7f7;
-  --blue-accent: #1b74e4;
-  --navy:        #0d1b2a;
+  --ink:         #0D1117;
+  --ink-60:      #6B7280;
+  --ink-20:      #E8EAF0;
+  --surface:     #F7F8FA;
+  --white:       #FFFFFF;
+
+  --teal:        #0F7B6C;
+  --teal-dark:   #0a5a52;
+  --teal-mid:    #18A092;
+  --teal-light:  #E6F4F2;
+  --teal-pale:   #E6F4F2;
+
+  --gold:        #C9924A;
+  --gold-pale:   #FBF3E8;
+
+  --blue-accent: #0F7B6C;
+  --navy:        #0D1117;
   --dark-bg:     #111827;
   --dark-panel:  #1f2937;
-  --white:       #ffffff;
-  --off-white:   #f8fafc;
-  --gray-100:    #f1f5f9;
-  --gray-200:    #e2e8f0;
-  --gray-400:    #94a3b8;
-  --gray-600:    #475569;
-  --gray-800:    #1e293b;
-  --danger:      #ef4444;
+
+  --gray-100:    #F7F8FA;
+  --gray-200:    #E8EAF0;
+  --gray-400:    #6B7280;
+  --gray-500:    #6B7280;
+  --gray-600:    #4B5563;
+  --gray-700:    #374151;
+  --gray-800:    #0D1117;
+
+  --danger:      #E8394A;
   --success:     #22c55e;
+  --off-white:   #F7F8FA;
 
   --font-sans:   'DM Sans', sans-serif;
-  --font-display:'Space Grotesk', sans-serif;
+  --font-display:'DM Serif Display', serif;
+  --font-mono:   'DM Mono', monospace;
 
-  --radius-sm:   6px;
+  --radius-sm:   4px;
   --radius:      10px;
-  --radius-lg:   16px;
-  --shadow:      0 2px 12px rgba(0,0,0,0.08);
-  --shadow-md:   0 4px 24px rgba(0,0,0,0.12);
+  --radius-lg:   18px;
+  --shadow:      0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:   0 4px 24px rgba(0,0,0,0.10);
 }
 
 /* ── Reset ────────────────────────────────────────────────── */
@@ -32,8 +48,8 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--off-white);
-  color: var(--gray-800);
+  background: var(--surface);
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -43,7 +59,6 @@ a { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; }
 input, select { font-family: inherit; }
 
-/* ── Scrollbar ────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--ink-20); border-radius: 99px; } 

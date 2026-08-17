@@ -29,13 +29,9 @@ export default function Login() {
     <div className="login-page">
       {/* Left Panel */}
       <div className="login-hero">
-        <div className="hero-logo">
-          <span className="hero-logo-dna">🧬</span>
-          <div>
-            <span className="hero-logo-red">RED</span>
-            <span className="hero-logo-sub">RARE DISEASE EPI DATABASE</span>
-          </div>
-        </div>
+      <div className="hero-logo">
+         <img src="/logo.png" alt="REED Logo" />
+      </div>
 
         <h1 className="hero-headline">
           <span className="hero-accent">MAN, AND MACHINE</span>{' '}
