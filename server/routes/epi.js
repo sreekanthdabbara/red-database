@@ -4,11 +4,12 @@ const auth   = require('../middleware/auth');
 
 // ── GET /api/epi — filtered list ─────────────────────────────
 router.get('/', auth, async (req, res) => {
-  const { disease, country, gender, epi_metric, year_from, year_to, search, continent } = req.query;
+  const { disease, country, gender, epi_metric, year_from, year_to, search, continent, specialty } = req.query;
 
   let sql = 'SELECT * FROM epi_data WHERE 1=1';
   const params = [];
 
+  if (specialty)  { sql += ' AND specialty = ?';                           params.push(specialty); }
   if (disease)    { sql += ' AND disease_name = ?';                        params.push(disease); }
   if (continent)  { sql += ' AND continent = ?';                           params.push(continent); }
   if (country)    { sql += ' AND country_area = ?';                        params.push(country); }
@@ -34,18 +35,19 @@ router.get('/', auth, async (req, res) => {
 
 // ── GET /api/epi/chart/by-country ────────────────────────────
 router.get('/chart/by-country', auth, async (req, res) => {
-  const { disease, gender, epi_metric, continent, country } = req.query;
+  const { disease, gender, epi_metric, continent, country, specialty } = req.query;
   let sql = `
     SELECT country_area, published_period, epi_metric,
            MAX(value_estimation) AS estimate
     FROM epi_data WHERE value_estimation IS NOT NULL
   `;
   const params = [];
+  if (specialty)  { sql += ' AND specialty = ?';      params.push(specialty); }
   if (disease)    { sql += ' AND disease_name = ?';   params.push(disease); }
-  if (continent)  { sql += ' AND continent = ?';       params.push(continent); }
-  if (country)    { sql += ' AND country_area = ?';    params.push(country); }
-  if (gender)     { sql += ' AND gender_type = ?';     params.push(gender); }
-  if (epi_metric) { sql += ' AND epi_metric = ?';      params.push(epi_metric); }
+  if (continent)  { sql += ' AND continent = ?';      params.push(continent); }
+  if (country)    { sql += ' AND country_area = ?';   params.push(country); }
+  if (gender)     { sql += ' AND gender_type = ?';    params.push(gender); }
+  if (epi_metric) { sql += ' AND epi_metric = ?';     params.push(epi_metric); }
   sql += ' GROUP BY country_area, published_period, epi_metric ORDER BY estimate DESC LIMIT 20';
 
   try {
@@ -56,28 +58,25 @@ router.get('/chart/by-country', auth, async (req, res) => {
   }
 });
 
-// ── GET /api/epi/countries?continent=Europe ───────────────────
-router.get('/countries', auth, async (req, res) => {
-  const { continent } = req.query;
-  let sql = 'SELECT DISTINCT country_area FROM epi_data WHERE 1=1';
-  const params = [];
-  if (continent) { sql += ' AND continent = ?'; params.push(continent); }
-  sql += ' ORDER BY country_area';
+// ── GET /api/epi/specialties ──────────────────────────────────
+router.get('/specialties', auth, async (req, res) => {
   try {
-    const [rows] = await db.query(sql, params);
-    res.json(rows.map(r => r.country_area));
+    const [rows] = await db.query(
+      'SELECT DISTINCT specialty FROM epi_data WHERE specialty IS NOT NULL ORDER BY specialty'
+    );
+    res.json(rows.map(r => r.specialty));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ── GET /api/epi/diseases?country=Japan ───────────────────────
+// ── GET /api/epi/diseases?specialty=X&continent=Y ─────────────
 router.get('/diseases', auth, async (req, res) => {
-  const { country, continent } = req.query;
+  const { continent, specialty } = req.query;
   let sql = 'SELECT DISTINCT disease_name FROM epi_data WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country_area = ?'; params.push(country); }
-  if (continent) { sql += ' AND continent = ?';    params.push(continent); }
+  if (continent) { sql += ' AND continent = ?';  params.push(continent); }
+  if (specialty) { sql += ' AND specialty = ?';  params.push(specialty); }
   sql += ' ORDER BY disease_name';
   try {
     const [rows] = await db.query(sql, params);
@@ -87,7 +86,23 @@ router.get('/diseases', auth, async (req, res) => {
   }
 });
 
-// ── GET /api/epi/metrics?country=Japan&disease=Achondroplasia ─
+// ── GET /api/epi/countries?disease=X&continent=Y ──────────────
+router.get('/countries', auth, async (req, res) => {
+  const { continent, disease } = req.query;
+  let sql = 'SELECT DISTINCT country_area FROM epi_data WHERE 1=1';
+  const params = [];
+  if (continent) { sql += ' AND continent = ?';    params.push(continent); }
+  if (disease)   { sql += ' AND disease_name = ?'; params.push(disease); }
+  sql += ' ORDER BY country_area';
+  try {
+    const [rows] = await db.query(sql, params);
+    res.json(rows.map(r => r.country_area));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── GET /api/epi/metrics?country=X&disease=Y ──────────────────
 router.get('/metrics', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
   let sql = 'SELECT DISTINCT epi_metric FROM epi_data WHERE 1=1';
@@ -104,7 +119,7 @@ router.get('/metrics', auth, async (req, res) => {
   }
 });
 
-// ── GET /api/epi/genders?country=Japan&disease=Achondroplasia ─
+// ── GET /api/epi/genders?country=X&disease=Y ──────────────────
 router.get('/genders', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
   let sql = 'SELECT DISTINCT gender_type FROM epi_data WHERE 1=1';
