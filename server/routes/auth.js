@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
     await db.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashed]);
     res.status(201).json({ message: 'Account created successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: db.describeError(err) });
   }
 });
 
@@ -53,7 +53,7 @@ router.post('/login', async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: db.describeError(err) });
   }
 });
 

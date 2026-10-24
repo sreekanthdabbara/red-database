@@ -13,14 +13,20 @@ const pool = mysql.createPool({
   queueLimit:         0,
 });
 
+// Where we're connecting (no password) — shown in logs and /api/health
+pool.target = `${pool.pool.config.connectionConfig.host}:${pool.pool.config.connectionConfig.port}/${pool.pool.config.connectionConfig.database}`;
+
+// Connection errors can have an empty message (e.g. AggregateError on ECONNREFUSED); fall back to the code
+pool.describeError = (err) => err.message || err.code || String(err);
+
 // Test connection on startup
 (async () => {
   try {
     const conn = await pool.getConnection();
-    console.log('✅ MySQL connected:', process.env.DB_NAME);
+    console.log('✅ MySQL connected:', pool.target);
     conn.release();
   } catch (err) {
-    console.error('❌ MySQL connection failed:', err.message);
+    console.error(`❌ MySQL connection failed (${pool.target}):`, pool.describeError(err));
   }
 })();
 

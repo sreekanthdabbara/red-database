@@ -35,7 +35,18 @@ app.use('/api/mutation-rate',   require('./routes/mutationRate'));
 app.use('/api/genetic-testing', require('./routes/geneticTesting'));
 app.use('/api/definitions',     require('./routes/definitions'));
 
-app.get('/api/health', (_, res) => res.json({ status: 'ok', version: '2.0' }));
+// Includes database reachability (host/port/db name only, never credentials)
+const db = require('./config/db');
+app.get('/api/health', async (_, res) => {
+  let database;
+  try {
+    await db.query('SELECT 1');
+    database = { ok: true, target: db.target };
+  } catch (err) {
+    database = { ok: false, target: db.target, error: db.describeError(err) };
+  }
+  res.json({ status: 'ok', version: '2.0', database });
+});
 app.use('/api', (_, res) => res.status(404).json({ message: 'Route not found' }));
 
 // ── Serve the built React site (npm run build at the repo root) ──
