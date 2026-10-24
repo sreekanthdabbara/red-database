@@ -5,7 +5,11 @@ import './Navbar.css';
 
 const NAV_ITEMS = [
   { label: 'World Population',     to: '/world-population' },
-  { label: 'Prevalence/Incidence', to: '/prevalence' },
+  { label: 'Prevalence',           to: '/prevalence' },
+  { label: 'Incidence',            to: '/incidence' },
+  { label: 'Survival',             to: '/survival' },
+  { label: 'Genetic Testing',      to: '/genetic-testing' },
+  { label: 'Mutation Rate',        to: '/mutation-rate' },
   { label: 'Mortality',            to: '/mortality' },
   { label: 'Definitions',          to: '/definitions' },
   { label: 'Contact Us',           to: '/contact' },

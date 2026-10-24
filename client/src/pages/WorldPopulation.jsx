@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
+  LineChart, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import api from '../api/axios';
+import MultiSelect from '../components/MultiSelect';
 import './WorldPopulation.css';
 
 const TABS    = ['Gender', 'Age Group', 'Growth Rate'];
@@ -96,6 +97,25 @@ function pivotAgeByYear(data) {
   return { rows, years };
 }
 
+// ── One chart line per country (first MAX_CHART_LINES) ───────
+const MAX_CHART_LINES = 10;
+
+function buildCountryLines(data, valueKey) {
+  const allCountries = [...new Set(data.map(r => r.country))].sort();
+  const countries = allCountries.slice(0, MAX_CHART_LINES);
+  const byYear = {};
+  data.forEach(r => {
+    if (!countries.includes(r.country)) return;
+    byYear[r.year] = byYear[r.year] || { year: r.year };
+    byYear[r.year][r.country] = r[valueKey] != null ? parseFloat(r[valueKey]) : null;
+  });
+  return {
+    points: Object.values(byYear).sort((a, b) => a.year - b.year),
+    countries,
+    total: allCountries.length,
+  };
+}
+
 // ── Build age chart data ──────────────────────────────────────
 function buildAgeChartData(pivotedAge) {
   return pivotedAge.years.map(y => {
@@ -119,7 +139,7 @@ export default function WorldPopulation() {
   const [regions,   setRegions]   = useState([]);
 
   // Selected filters
-  const [selCountry, setSelCountry] = useState('');
+  const [selCountries, setSelCountries] = useState([]);   // empty = all countries
   const [selRegion,  setSelRegion]  = useState('');
   const [selGender,  setSelGender]  = useState('Both');
   const [yearFrom,   setYearFrom]   = useState(2024);
@@ -147,7 +167,7 @@ export default function WorldPopulation() {
     api.get(url)
       .then(r => {
         setCountries(r.data || []);
-        setSelCountry(r.data?.[0] || '');
+        setSelCountries([]);
       })
       .catch(() => {});
   }, [selRegion]);
@@ -157,7 +177,7 @@ export default function WorldPopulation() {
     setLoading(true); setError('');
 
     const params = new URLSearchParams();
-    if (selCountry) params.set('country', selCountry);
+    selCountries.forEach(c => params.append('country', c));
     if (selRegion)  params.set('region',  selRegion);
 
     // Gender — Growth Rate always uses Both
@@ -171,7 +191,7 @@ export default function WorldPopulation() {
     params.set('year_to',   yearTo);
 
     const ageParams = new URLSearchParams();
-    if (selCountry) ageParams.set('country',   selCountry);
+    selCountries.forEach(c => ageParams.append('country', c));
     if (selRegion)  ageParams.set('region',    selRegion);
     if (selGender)  ageParams.set('gender',    selGender);
     ageParams.set('year_from', yearFrom);
@@ -191,7 +211,7 @@ export default function WorldPopulation() {
     } finally {
       setLoading(false);
     }
-  }, [selCountry, selRegion, selGender, activeTab, yearFrom, yearTo]);
+  }, [selCountries, selRegion, selGender, activeTab, yearFrom, yearTo]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -200,6 +220,13 @@ export default function WorldPopulation() {
   const pivotedGrowth = useMemo(() => pivotByYear(growthData, 'growth_rate'), [growthData]);
   const pivotedAge    = useMemo(() => pivotAgeByYear(ageData),                [ageData]);
   const ageChartData  = useMemo(() => buildAgeChartData(pivotedAge),          [pivotedAge]);
+  const genderLines   = useMemo(() => buildCountryLines(genderData, 'cases'),       [genderData]);
+  const growthLines   = useMemo(() => buildCountryLines(growthData, 'growth_rate'), [growthData]);
+
+  const countryLabel =
+    selCountries.length === 0 ? (selRegion || 'Global')
+    : selCountries.length <= 3 ? selCountries.join(', ')
+    : `${selCountries.length} countries`;
 
   const handleExport = () => {
     let rows = [], headers = [];
@@ -294,10 +321,8 @@ export default function WorldPopulation() {
           </select>
 
           <label className="fl">Country</label>
-          <select className="fs" value={selCountry}
-            onChange={e => setSelCountry(e.target.value)}>
-            {countries.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <MultiSelect options={countries} selected={selCountries}
+            onChange={setSelCountries} allLabel="All countries" noun="countries" />
 
           {/* Gender — hidden for Growth Rate (only Both available) */}
           {activeTab !== 'Growth Rate' && (
@@ -456,31 +481,39 @@ export default function WorldPopulation() {
               {activeTab === 'Gender' && (
                 <>
                   <h3 className="chart-title">
-                    Population Cases Over Time — {selCountry || 'Global'}
+                    Population Cases Over Time — {countryLabel}
                   </h3>
                   <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={genderData}
+                    <LineChart data={genderLines.points}
                       margin={{ left: 20, right: 30, top: 10, bottom: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E8EAF0" />
                       <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#6B7280' }} />
                       <YAxis tick={{ fontSize: 11, fill: '#6B7280' }}
                         tickFormatter={v => (v / 1000).toFixed(0) + 'M'} />
                       <Tooltip
-                        formatter={v => [Number(v).toLocaleString(), 'Cases (thousands)']}
+                        formatter={(v, name) => [Number(v).toLocaleString(), `${name} (thousands)`]}
                         contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8EAF0' }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="cases" stroke="#0F7B6C"
-                        strokeWidth={2} dot={false} name="Population" />
+                      {genderLines.countries.map((c, i) => (
+                        <Line key={c} type="monotone" dataKey={c} name={c}
+                          stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                          strokeWidth={2} dot={false} />
+                      ))}
                     </LineChart>
                   </ResponsiveContainer>
+                  {genderLines.total > MAX_CHART_LINES && (
+                    <p className="chart-note">
+                      <em>Chart shows the first {MAX_CHART_LINES} of {genderLines.total} countries; the table lists all</em>
+                    </p>
+                  )}
                 </>
               )}
 
               {activeTab === 'Age Group' && (
                 <>
                   <h3 className="chart-title">
-                    Population by Age Group Over Time — {selCountry || 'Global'} ({yearFrom}–{yearTo})
+                    Population by Age Group Over Time — {countryLabel} ({yearFrom}–{yearTo})
                   </h3>
                   <ResponsiveContainer width="100%" height={400}>
                     <LineChart data={ageChartData}
@@ -519,26 +552,33 @@ export default function WorldPopulation() {
               {activeTab === 'Growth Rate' && (
                 <>
                   <h3 className="chart-title">
-                    Population Growth Rate Over Time — {selCountry || 'Global'}
+                    Population Growth Rate Over Time — {countryLabel}
                   </h3>
                   <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={growthData}
+                    <LineChart data={growthLines.points}
                       margin={{ left: 20, right: 30, top: 10, bottom: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E8EAF0" />
                       <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#6B7280' }} />
                       <YAxis tick={{ fontSize: 11, fill: '#6B7280' }}
                         tickFormatter={v => v + '%'} />
                       <Tooltip
-                        formatter={v => [v + '%', 'Growth Rate']}
+                        formatter={(v, name) => [v + '%', name]}
                         contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8EAF0' }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="growth_rate" stroke="#0F7B6C"
-                        strokeWidth={2} dot={false} name="Growth Rate %" />
+                      {growthLines.countries.map((c, i) => (
+                        <Line key={c} type="monotone" dataKey={c} name={c}
+                          stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                          strokeWidth={2} dot={false} />
+                      ))}
                     </LineChart>
                   </ResponsiveContainer>
                   <p className="chart-note">
-                    <em>Negative values indicate population decline</em>
+                    <em>
+                      Negative values indicate population decline
+                      {growthLines.total > MAX_CHART_LINES &&
+                        ` · Chart shows the first ${MAX_CHART_LINES} of ${growthLines.total} countries; the table lists all`}
+                    </em>
                   </p>
                 </>
               )}

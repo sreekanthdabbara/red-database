@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// Relative by default: in production the API serves this site, and in
+// development the "proxy" in package.json forwards /api to localhost:3001.
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
 });
 
 // Attach JWT token to every request

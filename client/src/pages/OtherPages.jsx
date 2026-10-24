@@ -52,16 +52,6 @@ export function Definitions() {
   );
 }
 
-// Mortality.jsx
-export function Mortality() {
-  return (
-    <div style={{ padding: 48, textAlign: 'center', color: 'var(--gray-400)' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 12 }}>Mortality</h2>
-      <p>Mortality data coming soon. Add your records via the database schema.</p>
-    </div>
-  );
-}
-
 // WorldPopulation.jsx
 export function WorldPopulation() {
   return (

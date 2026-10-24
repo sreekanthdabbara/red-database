@@ -12,7 +12,7 @@ router.get('/', auth, async (req, res) => {
   if (specialty)  { sql += ' AND specialty = ?';                           params.push(specialty); }
   if (disease)    { sql += ' AND disease_name = ?';                        params.push(disease); }
   if (continent)  { sql += ' AND continent = ?';                           params.push(continent); }
-  if (country)    { sql += ' AND country_area = ?';                        params.push(country); }
+  if (country)    { sql += ' AND country_area IN (?)';                        params.push([].concat(country)); }
   if (gender)     { sql += ' AND gender_type = ?';                         params.push(gender); }
   if (epi_metric) { sql += ' AND epi_metric = ?';                          params.push(epi_metric); }
   if (year_from)  { sql += ' AND CAST(published_period AS UNSIGNED) >= ?'; params.push(Number(year_from)); }
@@ -45,7 +45,7 @@ router.get('/chart/by-country', auth, async (req, res) => {
   if (specialty)  { sql += ' AND specialty = ?';      params.push(specialty); }
   if (disease)    { sql += ' AND disease_name = ?';   params.push(disease); }
   if (continent)  { sql += ' AND continent = ?';      params.push(continent); }
-  if (country)    { sql += ' AND country_area = ?';   params.push(country); }
+  if (country)    { sql += ' AND country_area IN (?)';   params.push([].concat(country)); }
   if (gender)     { sql += ' AND gender_type = ?';    params.push(gender); }
   if (epi_metric) { sql += ' AND epi_metric = ?';     params.push(epi_metric); }
   sql += ' GROUP BY country_area, published_period, epi_metric ORDER BY estimate DESC LIMIT 20';
@@ -107,7 +107,7 @@ router.get('/metrics', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
   let sql = 'SELECT DISTINCT epi_metric FROM epi_data WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country_area = ?';  params.push(country); }
+  if (country)   { sql += ' AND country_area IN (?)';  params.push([].concat(country)); }
   if (continent) { sql += ' AND continent = ?';     params.push(continent); }
   if (disease)   { sql += ' AND disease_name = ?';  params.push(disease); }
   sql += ' ORDER BY epi_metric';
@@ -124,7 +124,7 @@ router.get('/genders', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
   let sql = 'SELECT DISTINCT gender_type FROM epi_data WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country_area = ?';  params.push(country); }
+  if (country)   { sql += ' AND country_area IN (?)';  params.push([].concat(country)); }
   if (continent) { sql += ' AND continent = ?';     params.push(continent); }
   if (disease)   { sql += ' AND disease_name = ?';  params.push(disease); }
   sql += ' ORDER BY gender_type';

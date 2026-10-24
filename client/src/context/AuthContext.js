@@ -24,13 +24,19 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
+  // Create the account, then log straight in
+  const register = async (name, email, password) => {
+    await api.post('/auth/register', { name, email, password });
+    return login(email, password);
+  };
+
   const logout = () => {
     localStorage.removeItem('red_token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,0 +1,23 @@
+.gt-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 104px);
+  overflow: hidden;
+  background: #F7F8FA;
+}
+
+.gt-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #E8EAF0;
+  flex-wrap: wrap;
+}
+
+.gt-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}

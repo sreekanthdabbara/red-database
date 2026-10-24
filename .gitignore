@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output
+client/build/
+
+# Secrets — use server/.env.example as the template
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.log
+
+# Local database dumps
+*.sql.gz
+deploy_dump.sql

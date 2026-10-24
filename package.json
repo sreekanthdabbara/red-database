@@ -1,0 +1,13 @@
+{
+  "name": "red-database",
+  "version": "1.0.0",
+  "private": true,
+  "description": "REED — Rare Disease Epi Database (API + React site, deployed as one service)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm ci --prefix server --omit=dev && npm ci --prefix client && npm run build --prefix client",
+    "start": "NODE_ENV=production node server/index.js"
+  }
+}

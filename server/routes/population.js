@@ -38,12 +38,12 @@ router.get('/gender', auth, async (req, res) => {
   const { country, region, gender, year_from, year_to } = req.query;
   let sql = 'SELECT * FROM population_gender WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country = ?';                  params.push(country); }
+  if (country)   { sql += ' AND country IN (?)';                  params.push([].concat(country)); }
   if (region)    { sql += ' AND region = ?';                   params.push(region); }
   if (gender && gender !== 'All') { sql += ' AND gender = ?';  params.push(gender); }
   if (year_from) { sql += ' AND year >= ?';                    params.push(+year_from); }
   if (year_to)   { sql += ' AND year <= ?';                    params.push(+year_to); }
-  sql += ' ORDER BY year ASC, country ASC LIMIT 2000';
+  sql += ' ORDER BY year ASC, country ASC LIMIT 20000';
   try {
     const [rows] = await db.query(sql, params);
     res.json(rows);
@@ -57,12 +57,12 @@ router.get('/growth', auth, async (req, res) => {
   const { country, region, gender, year_from, year_to } = req.query;
   let sql = 'SELECT * FROM population_growth WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country = ?';                  params.push(country); }
+  if (country)   { sql += ' AND country IN (?)';                  params.push([].concat(country)); }
   if (region)    { sql += ' AND region = ?';                   params.push(region); }
   if (gender && gender !== 'All') { sql += ' AND gender = ?';  params.push(gender); }
   if (year_from) { sql += ' AND year >= ?';                    params.push(+year_from); }
   if (year_to)   { sql += ' AND year <= ?';                    params.push(+year_to); }
-  sql += ' ORDER BY year ASC LIMIT 2000';
+  sql += ' ORDER BY year ASC LIMIT 20000';
   try {
     const [rows] = await db.query(sql, params);
     res.json(rows);
@@ -76,13 +76,13 @@ router.get('/age', auth, async (req, res) => {
   const { country, region, year, year_from, year_to, gender } = req.query;
   let sql = 'SELECT * FROM population_age WHERE 1=1';
   const params = [];
-  if (country)   { sql += ' AND country = ?';                  params.push(country); }
+  if (country)   { sql += ' AND country IN (?)';                  params.push([].concat(country)); }
   if (region)    { sql += ' AND region = ?';                   params.push(region); }
   if (year)      { sql += ' AND year = ?';                     params.push(+year); }
   if (year_from) { sql += ' AND year >= ?';                    params.push(+year_from); }
   if (year_to)   { sql += ' AND year <= ?';                    params.push(+year_to); }
   if (gender && gender !== 'All') { sql += ' AND gender = ?';  params.push(gender); }
-  sql += ' ORDER BY country ASC, year ASC LIMIT 5000';
+  sql += ' ORDER BY country ASC, year ASC LIMIT 20000';
   try {
     const [rows] = await db.query(sql, params);
     res.json(rows);

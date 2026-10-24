@@ -1,51 +1,81 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import api from '../api/axios';
+import MultiSelect from '../components/MultiSelect';
 import './PrevalenceIncidence.css';
 
-// ── Pivot by published_period (year) as columns ───────────────
-function pivotByYear(data) {
-  const years = [...new Set(data.map(r => r.published_period))].sort();
-  const grouped = {};
+// Keep the current choice if the reloaded list still has it, else fall back to "All" ('')
+const keepIfListed = (list) => (prev) => ((list || []).includes(prev) ? prev : '');
 
-  data.forEach(row => {
-    const key = `${row.country_area}||${row.disease_name}||${row.gender_type}||${row.epi_metric}`;
-    if (!grouped[key]) {
-      grouped[key] = {
-        country_area:  row.country_area,
-        disease_name:  row.disease_name,
-        gender_type:   row.gender_type,
-        age_group:     row.age_group,
-        race:          row.race,
-        ethnicity:     row.ethnicity,
-        epi_metric:    row.epi_metric,
-        study_design:  row.study_design,
-        reference:     row.reference,
-        url:           row.url,
-      };
-    }
-    grouped[key][row.published_period] = row.value_estimation;
-    grouped[key][`est_${row.published_period}`] = row.prevalence_estimate_text;
-  });
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-  return { rows: Object.values(grouped), years };
-}
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : '');
+
+// Date of update falls back to when the row was loaded;
+// value_estimation is DECIMAL(12,4), so drop trailing zeros ("6.6700" → "6.67")
+const cellText = (row, key) => {
+  if (key === 'date_of_update') return formatDate(row.date_of_update || row.created_at);
+  if (key === 'value_estimation' && row[key] != null) return String(Number(row[key]));
+  return row[key];
+};
+
+// Table shows these; Download exports EXPORT_COLUMNS.
+// specialty_1 / data_source_type / date_of_update are not in epi_data yet —
+// they show once the columns are added to the table.
+const TABLE_COLUMNS = [
+  { label: 'Country / Area',      key: 'country_area', className: 'country-cell' },
+  { label: 'Published Period',    key: 'published_period' },
+  { label: 'Study Year',          key: 'study_year' },
+  { label: 'Specialty Name',      key: 'specialty' },
+  { label: 'Specialty 1',         key: 'specialty_1' },
+  { label: 'Disease Name',        key: 'disease_name', className: 'disease-cell' },
+  { label: 'Epidemiology Metric', key: 'epi_metric', className: 'metric-cell' },
+  { label: 'Estimate',            key: 'prevalence_estimate_text' },
+  { label: 'Epi Value',           key: 'value_estimation', className: 'value-cell' },
+  { label: 'Data Source Type',    key: 'data_source_type' },
+  { label: 'Date of Update',      key: 'date_of_update' },
+];
+
+const EXPORT_COLUMNS = [
+  { label: 'Region',                                         key: 'continent' },
+  { label: 'Country / Area',                                 key: 'country_area' },
+  { label: 'Published period',                               key: 'published_period' },
+  { label: 'Study year',                                     key: 'study_year' },
+  { label: 'Specialty name',                                 key: 'specialty' },
+  { label: 'Specialty 1',                                    key: 'specialty_1' },
+  { label: 'Disease name',                                   key: 'disease_name' },
+  { label: 'Gender type',                                    key: 'gender_type' },
+  { label: 'Age',                                            key: 'age_group' },
+  { label: 'Race',                                           key: 'race' },
+  { label: 'Ethnicity',                                      key: 'ethnicity' },
+  { label: 'Epidemiology metric',                            key: 'epi_metric' },
+  { label: 'Estimate (per 10,000 / 100,000 / cases)',        key: 'prevalence_estimate_text' },
+  { label: 'Epi value',                                      key: 'value_estimation' },
+  { label: 'Study sample size',                              key: 'study_sample_size' },
+  { label: 'Study design',                                   key: 'study_design' },
+  { label: 'Data source type',                               key: 'data_source_type' },
+  { label: 'Reference',                                      key: 'reference' },
+  { label: 'URL',                                            key: 'url' },
+  { label: 'Date of update',                                 key: 'date_of_update' },
+];
 
 export default function PrevalenceIncidence() {
-  // Filter options — all dynamic
-  const [continents, setContinents] = useState([]);
-  const [countries,  setCountries]  = useState([]);
-  const [diseases,   setDiseases]   = useState([]);
-  const [metrics,    setMetrics]    = useState([]);
-  const [genders,    setGenders]    = useState([]);
+  // Filter options
+  const [continents,  setContinents]  = useState([]);
+  const [specialties, setSpecialties] = useState([]);
+  const [diseases,    setDiseases]    = useState([]);
+  const [countries,   setCountries]   = useState([]);
+  const [metrics,     setMetrics]     = useState([]);
+  const [genders,     setGenders]     = useState([]);
 
   // Selected filters
   const [selContinent, setSelContinent] = useState('');
-  const [selCountry,   setSelCountry]   = useState('');
+  const [selSpecialty, setSelSpecialty] = useState('');
   const [selDisease,   setSelDisease]   = useState('');
+  const [selCountries, setSelCountries] = useState([]);   // empty = all countries
   const [selMetric,    setSelMetric]    = useState('');
   const [selGender,    setSelGender]    = useState('');
   const [yearFrom,     setYearFrom]     = useState(1965);
@@ -58,77 +88,86 @@ export default function PrevalenceIncidence() {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
 
-  // ── 1. Load continents on mount ───────────────────────────
+  // ── 1. Load continents and specialties on mount ───────────
   useEffect(() => {
     api.get('/epi/filter-options')
       .then(r => setContinents(r.data.continents || []))
       .catch(() => {});
-  }, []);
-
-  // ── 2. Load countries when continent changes ──────────────
-  useEffect(() => {
-    const url = selContinent
-      ? `/epi/countries?continent=${encodeURIComponent(selContinent)}`
-      : '/epi/countries';
-    api.get(url)
+    api.get('/epi/specialties')
       .then(r => {
-        setCountries(r.data || []);
-        setSelCountry(r.data?.[0] || '');
+        setSpecialties(r.data || []);
+        setSelSpecialty(keepIfListed(r.data));
       })
       .catch(() => {});
-  }, [selContinent]);
+  }, []);
 
-  // ── 3. Load diseases when country changes ─────────────────
+  // ── 2. Load diseases when specialty or continent changes ──
   useEffect(() => {
-    if (!selCountry) return;
     const params = new URLSearchParams();
-    params.set('country', selCountry);
+    if (selSpecialty) params.set('specialty', selSpecialty);
     if (selContinent) params.set('continent', selContinent);
     api.get(`/epi/diseases?${params}`)
       .then(r => {
         setDiseases(r.data || []);
-        setSelDisease(r.data?.[0] || '');
+        setSelDisease(keepIfListed(r.data));
       })
       .catch(() => {});
-  }, [selCountry, selContinent]);
+  }, [selSpecialty, selContinent]);
 
-  // ── 4. Load metrics when disease changes ──────────────────
+  // ── 3. Load countries when disease changes ────────────────
   useEffect(() => {
-    if (!selCountry || !selDisease) return;
     const params = new URLSearchParams();
-    params.set('country', selCountry);
+    params.set('disease', selDisease);
+    if (selContinent) params.set('continent', selContinent);
+    api.get(`/epi/countries?${params}`)
+      .then(r => {
+        const list = r.data || [];
+        setCountries(list);
+        // keep ticked countries that are still available (region/disease changed)
+        setSelCountries(prev => {
+          const kept = prev.filter(c => list.includes(c));
+          return kept.length === prev.length ? prev : kept;
+        });
+      })
+      .catch(() => {});
+  }, [selDisease, selContinent]);
+
+  // ── 4. Load metrics when country or disease changes ───────
+  useEffect(() => {
+    const params = new URLSearchParams();
+    selCountries.forEach(c => params.append('country', c));
     params.set('disease', selDisease);
     if (selContinent) params.set('continent', selContinent);
     api.get(`/epi/metrics?${params}`)
       .then(r => {
         setMetrics(r.data || []);
-        setSelMetric(r.data?.[0] || '');
+        setSelMetric(keepIfListed(r.data));
       })
       .catch(() => {});
-  }, [selCountry, selDisease, selContinent]);
+  }, [selCountries, selDisease, selContinent]);
 
-  // ── 5. Load genders when disease changes ──────────────────
+  // ── 5. Load genders when country or disease changes ───────
   useEffect(() => {
-    if (!selCountry || !selDisease) return;
     const params = new URLSearchParams();
-    params.set('country', selCountry);
+    selCountries.forEach(c => params.append('country', c));
     params.set('disease', selDisease);
     if (selContinent) params.set('continent', selContinent);
     api.get(`/epi/genders?${params}`)
       .then(r => {
         setGenders(r.data || []);
-        setSelGender(r.data?.[0] || '');
+        setSelGender(keepIfListed(r.data));
       })
       .catch(() => {});
-  }, [selCountry, selDisease, selContinent]);
+  }, [selCountries, selDisease, selContinent]);
 
   // ── 6. Fetch table data ───────────────────────────────────
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
     const params = new URLSearchParams();
+    if (selSpecialty) params.set('specialty',  selSpecialty);
     if (selDisease)   params.set('disease',    selDisease);
     if (selContinent) params.set('continent',  selContinent);
-    if (selCountry)   params.set('country',    selCountry);
+    selCountries.forEach(c => params.append('country', c));
     if (selGender)    params.set('gender',     selGender);
     if (selMetric)    params.set('epi_metric', selMetric);
     params.set('year_from', yearFrom);
@@ -151,37 +190,20 @@ export default function PrevalenceIncidence() {
     } finally {
       setLoading(false);
     }
-  }, [selDisease, selContinent, selCountry, selGender, selMetric, yearFrom, yearTo]);
+  }, [selSpecialty, selDisease, selContinent, selCountries, selGender, selMetric, yearFrom, yearTo]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const pivoted = useMemo(() => pivotByYear(tableData), [tableData]);
-
+  // ── Export all columns ────────────────────────────────────
   const handleExport = () => {
-    const { rows, years } = pivoted;
-    const headers = [
-      'Country/Area', 'Disease', 'Gender', 'Age', 'Race',
-      'Ethnicity', 'Epi Metric', 'Study Design', 'Reference',
-      ...years.map(y => `${y} Value`),
-      ...years.map(y => `${y} Estimate`),
-    ];
-    const csvRows = [headers.join(',')];
-    rows.forEach(r => {
-      csvRows.push([
-        r.country_area, r.disease_name, r.gender_type,
-        `"${(r.age_group || '').replace(/"/g, '""')}"`,
-        r.race, r.ethnicity,
-        `"${(r.epi_metric || '').replace(/"/g, '""')}"`,
-        `"${(r.study_design || '').replace(/"/g, '""')}"`,
-        `"${(r.reference || '').replace(/"/g, '""')}"`,
-        ...years.map(y => r[y] ?? ''),
-        ...years.map(y => `"${(r[`est_${y}`] || '').replace(/"/g, '""')}"`),
-      ].join(','));
+    const csvRows = [EXPORT_COLUMNS.map(c => csvCell(c.label)).join(',')];
+    tableData.forEach(r => {
+      csvRows.push(EXPORT_COLUMNS.map(c => csvCell(cellText(r, c.key))).join(','));
     });
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `REED_epi_export_${Date.now()}.csv`;
+    a.download = `REED_prevalence_export_${Date.now()}.csv`;
     a.click();
   };
 
@@ -192,23 +214,27 @@ export default function PrevalenceIncidence() {
       <div className="prev-controls">
         <div className="ctrl-divider" />
 
+        {/* ── Disease specialty + Disease as pills ────────── */}
         <div className="ctrl-pills">
           <div className="pill-dropdown">
-            <span className="pill-label">Disease</span>
-            <select value={selDisease} onChange={e => setSelDisease(e.target.value)}>
-              {diseases.map(d => <option key={d} value={d}>{d}</option>)}
+            <span className="pill-label">Disease specialty</span>
+            <select value={selSpecialty} onChange={e => setSelSpecialty(e.target.value)}>
+              <option value="">All specialties</option>
+              {specialties.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <span className="pill-arrow">›</span>
           </div>
           <div className="pill-dropdown">
-            <span className="pill-label">Epi Metric</span>
-            <select value={selMetric} onChange={e => setSelMetric(e.target.value)}>
-              {metrics.map(m => <option key={m} value={m}>{m}</option>)}
+            <span className="pill-label">Disease</span>
+            <select value={selDisease} onChange={e => setSelDisease(e.target.value)}>
+              <option value="">All diseases</option>
+              {diseases.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
             <span className="pill-arrow">›</span>
           </div>
         </div>
 
+        {/* ── Year range ───────────────────────────────────── */}
         <div className="ctrl-year-clean">
           <span className="year-clean-label">Historical year</span>
           <div className="year-clean-row">
@@ -245,7 +271,7 @@ export default function PrevalenceIncidence() {
 
       <div className="prev-body">
 
-        {/* ── Sidebar ───────────────────────────────────────── */}
+        {/* ── Sidebar — Region, Country, Metric, Gender ─────── */}
         <aside className="prev-sidebar">
           <h3 className="sidebar-title">Selections</h3>
 
@@ -257,31 +283,25 @@ export default function PrevalenceIncidence() {
           </select>
 
           <label className="fl">Country / Area</label>
-          <select className="fs" value={selCountry}
-            onChange={e => setSelCountry(e.target.value)}>
-            {countries.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-
-          <label className="fl">Disease</label>
-          <select className="fs" value={selDisease}
-            onChange={e => setSelDisease(e.target.value)}>
-            {diseases.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
+          <MultiSelect options={countries} selected={selCountries}
+            onChange={setSelCountries} allLabel="All countries" noun="countries" />
 
           <label className="fl">Epi metric</label>
           <select className="fs" value={selMetric}
             onChange={e => setSelMetric(e.target.value)}>
+            <option value="">All metrics</option>
             {metrics.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
 
           <label className="fl">Gender</label>
           <select className="fs" value={selGender}
             onChange={e => setSelGender(e.target.value)}>
+            <option value="">All genders</option>
             {genders.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
 
           <div className="sidebar-count">
-            {loading ? '…' : `${pivoted.rows.length} record${pivoted.rows.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : `${tableData.length} record${tableData.length !== 1 ? 's' : ''}`}
           </div>
         </aside>
 
@@ -304,50 +324,21 @@ export default function PrevalenceIncidence() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Country / Area</th>
-                    <th>Disease Name</th>
-                    <th>Gender</th>
-                    <th>Age</th>
-                    <th>Race</th>
-                    <th>Ethnicity</th>
-                    <th>Epi Metric</th>
-                    <th>Study Design</th>
-                    <th>Reference</th>
-                    <th>URL</th>
-                    {pivoted.years.map(y => <th key={y}>{y}</th>)}
+                    {TABLE_COLUMNS.map(c => <th key={c.key}>{c.label}</th>)}
                   </tr>
                 </thead>
                 <tbody>
-                  {pivoted.rows.length === 0 ? (
+                  {tableData.length === 0 ? (
                     <tr>
-                      <td colSpan={10 + pivoted.years.length} className="no-data">
+                      <td colSpan={TABLE_COLUMNS.length} className="no-data">
                         No records match the selected filters.
                       </td>
                     </tr>
-                  ) : pivoted.rows.map((row, i) => (
+                  ) : tableData.map((row, i) => (
                     <tr key={i}>
-                      <td className="country-cell" title={row.country_area}>{row.country_area}</td>
-                      <td className="disease-cell" title={row.disease_name}>{row.disease_name}</td>
-                      <td title={row.gender_type}>{row.gender_type}</td>
-                      <td className="wrap-cell" title={row.age_group}>{row.age_group}</td>
-                      <td title={row.race}>{row.race}</td>
-                      <td className="wrap-cell" title={row.ethnicity}>{row.ethnicity}</td>
-                      <td className="metric-cell" title={row.epi_metric}>{row.epi_metric}</td>
-                      <td title={row.study_design}>{row.study_design}</td>
-                      <td className="ref-cell" title={row.reference}>{row.reference}</td>
-                      <td className="url-cell">
-                        {row.url && (
-                          <a href={row.url} target="_blank" rel="noreferrer" className="url-link">
-                            Link ↗
-                          </a>
-                        )}
-                      </td>
-                      {pivoted.years.map(y => (
-                        <td key={y} className="value-cell"
-                          title={row[y] != null
-                            ? `${row[y]} (${row[`est_${y}`] || ''})`
-                            : '—'}>
-                          {row[y] != null ? row[y] : '—'}
+                      {TABLE_COLUMNS.map(c => (
+                        <td key={c.key} className={c.className} title={row[c.key]}>
+                          {cellText(row, c.key)}
                         </td>
                       ))}
                     </tr>
