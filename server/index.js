@@ -45,7 +45,7 @@ app.get('/api/health', async (_, res) => {
   } catch (err) {
     // Which DB variables reached the app — names and set/empty only, never values
     const received = Object.keys(process.env)
-      .filter(k => /^(MYSQL|DB_)/i.test(k))
+      .filter(k => /^(MYSQL|DB_|DATABASE_URL)/i.test(k))
       .map(k => `${JSON.stringify(k)}: ${process.env[k] ? 'set' : 'EMPTY'}`);
     database = { ok: false, target: db.target, error: db.describeError(err), variables: received.length ? received : 'none' };
   }

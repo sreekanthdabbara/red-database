@@ -1,17 +1,20 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// DB_* locally; Railway's MySQL service provides MYSQL* variables
-const pool = mysql.createPool({
-  host:               process.env.DB_HOST     || process.env.MYSQLHOST     || 'localhost',
-  port:               process.env.DB_PORT     || process.env.MYSQLPORT     || 3306,
-  user:               process.env.DB_USER     || process.env.MYSQLUSER     || 'root',
-  password:           process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
-  database:           process.env.DB_NAME     || process.env.MYSQLDATABASE || 'red_database',
-  waitForConnections: true,
-  connectionLimit:    10,
-  queueLimit:         0,
-});
+const poolOptions = { waitForConnections: true, connectionLimit: 10, queueLimit: 0 };
+
+// DATABASE_URL (mysql://user:pass@host:port/db) wins when set — one variable for hosting.
+// Otherwise DB_* locally, or the MYSQL* variables Railway's MySQL service provides.
+const pool = process.env.DATABASE_URL
+  ? mysql.createPool({ uri: process.env.DATABASE_URL.trim(), ...poolOptions })
+  : mysql.createPool({
+      host:     process.env.DB_HOST     || process.env.MYSQLHOST     || 'localhost',
+      port:     process.env.DB_PORT     || process.env.MYSQLPORT     || 3306,
+      user:     process.env.DB_USER     || process.env.MYSQLUSER     || 'root',
+      password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
+      database: process.env.DB_NAME     || process.env.MYSQLDATABASE || 'red_database',
+      ...poolOptions,
+    });
 
 // Where we're connecting (no password) — shown in logs and /api/health
 pool.target = `${pool.pool.config.connectionConfig.host}:${pool.pool.config.connectionConfig.port}/${pool.pool.config.connectionConfig.database}`;
