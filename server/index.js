@@ -6,9 +6,16 @@ const cors    = require('cors');
 
 // Refuse to run in production with a missing or publicly known JWT secret
 const JWT_PLACEHOLDER = 'replace_with_a_long_random_secret_key';
+const jwtSecret = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' &&
-    (!process.env.JWT_SECRET || process.env.JWT_SECRET === JWT_PLACEHOLDER || process.env.JWT_SECRET.length < 32)) {
-  console.error('❌ JWT_SECRET must be set to a random string of at least 32 characters in production');
+    (!jwtSecret || jwtSecret === JWT_PLACEHOLDER || jwtSecret.length < 32)) {
+  const reason = !jwtSecret ? 'is not set'
+    : jwtSecret === JWT_PLACEHOLDER ? 'is still the placeholder'
+    : `is only ${jwtSecret.length} characters`;
+  // Names only (never values), to spot typos like "JWT_SECRET " or "jwt_secret"
+  const lookalikes = Object.keys(process.env).filter(k => /jwt|secret/i.test(k));
+  console.error(`❌ JWT_SECRET ${reason} — it must be a random string of at least 32 characters in production`);
+  console.error(`   Variables with JWT/SECRET in the name: ${lookalikes.map(k => JSON.stringify(k)).join(', ') || 'none'}`);
   process.exit(1);
 }
 
