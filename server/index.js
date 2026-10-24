@@ -43,7 +43,11 @@ app.get('/api/health', async (_, res) => {
     await db.query('SELECT 1');
     database = { ok: true, target: db.target };
   } catch (err) {
-    database = { ok: false, target: db.target, error: db.describeError(err) };
+    // Which DB variables reached the app — names and set/empty only, never values
+    const received = Object.keys(process.env)
+      .filter(k => /^(MYSQL|DB_)/i.test(k))
+      .map(k => `${JSON.stringify(k)}: ${process.env[k] ? 'set' : 'EMPTY'}`);
+    database = { ok: false, target: db.target, error: db.describeError(err), variables: received.length ? received : 'none' };
   }
   res.json({ status: 'ok', version: '2.0', database });
 });
