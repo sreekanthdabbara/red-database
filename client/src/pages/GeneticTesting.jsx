@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import api from '../api/axios';
 import MultiSelect from '../components/MultiSelect';
+import EpiInsights from '../components/EpiInsights';
 import './GeneticTesting.css';
 
 // Keep the current choice if the reloaded list still has it, else fall back to "All" ('')
@@ -273,7 +274,7 @@ export default function GeneticTesting() {
         </aside>
 
         {/* ── Main ──────────────────────────────────────────── */}
-        <div className="prev-main">
+        <div className={`prev-main${viewMode === 'table' ? ' has-insights' : ''}`}>
           <div className="view-toggle">
             <button className={`tb${viewMode === 'table' ? ' active' : ''}`}
               onClick={() => setViewMode('table')}>Table</button>
@@ -286,8 +287,8 @@ export default function GeneticTesting() {
           {loading ? (
             <div className="prev-loading"><div className="spinner" />Loading data…</div>
           ) : viewMode === 'table' ? (
-
-            /* ── TABLE — selected columns only ───────────────── */
+            <>
+            {/* ── TABLE — selected columns only ───────────────── */}
             <div className="table-wrapper">
               <table className="data-table">
                 <thead>
@@ -338,6 +339,14 @@ export default function GeneticTesting() {
                 </tbody>
               </table>
             </div>
+
+            <EpiInsights
+              rows={tableData}
+              disease={selDisease}
+              metric="Genetic testing rate"
+              fields={{ estimate: 'estimate_unit', metric: 'genetic_test_type' }}
+            />
+            </>
 
           ) : (
 

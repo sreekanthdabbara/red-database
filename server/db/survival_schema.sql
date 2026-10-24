@@ -26,12 +26,14 @@ CREATE TABLE IF NOT EXISTS survival_data (
   ethnicity           VARCHAR(200),
   survival_type       VARCHAR(200),
   year_of_survival    VARCHAR(100),
-  estimate            VARCHAR(100),
+  estimate            VARCHAR(100),   -- unit: %, months, years
+  epi_value           VARCHAR(100),
   study_sample_type   TEXT,
   study_design        VARCHAR(300),
   data_source_type    VARCHAR(200),
   reference           TEXT,
   url                 TEXT,
+  date_of_update      DATE,
   created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

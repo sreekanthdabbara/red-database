@@ -57,6 +57,7 @@ export default function Mortality() {
       title="Mortality"
       tableColumns={TABLE_COLUMNS}
       exportColumns={EXPORT_COLUMNS}
+      insights={{ metric: 'Mortality rate', fields: { metric: 'mortality_type' } }}
     />
   );
 }

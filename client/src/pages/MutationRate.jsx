@@ -56,6 +56,7 @@ export default function MutationRate() {
       title="Mutation Rate"
       tableColumns={TABLE_COLUMNS}
       exportColumns={EXPORT_COLUMNS}
+      insights={{ metric: 'Mutation rate', fields: { metric: 'mutation_type' } }}
     />
   );
 }

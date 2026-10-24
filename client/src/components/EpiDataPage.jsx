@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import api from '../api/axios';
 import MultiSelect from './MultiSelect';
+import EpiInsights from './EpiInsights';
 import '../pages/Survival.css';
 
 // Keep the current choice if the reloaded list still has it, else fall back to "All" ('')
@@ -37,6 +38,7 @@ export default function EpiDataPage({
   title,          // e.g. 'Mortality'
   tableColumns,   // [{ label, key, className? }]
   exportColumns,  // [{ label, key }]
+  insights = null,       // chart + summary under the table: true, or EpiInsights props
 }) {
   // Filter options
   const [continents,  setContinents]  = useState([]);
@@ -278,7 +280,7 @@ export default function EpiDataPage({
         </aside>
 
         {/* ── Main ──────────────────────────────────────────── */}
-        <div className="prev-main">
+        <div className={`prev-main${insights && viewMode === 'table' ? ' has-insights' : ''}`}>
           <div className="view-toggle">
             <button className={`tb${viewMode === 'table' ? ' active' : ''}`}
               onClick={() => setViewMode('table')}>Table</button>
@@ -319,8 +321,14 @@ export default function EpiDataPage({
                 </tbody>
               </table>
             </div>
+          ) : null}
 
-          ) : (
+          {!loading && viewMode === 'table' && insights && (
+            <EpiInsights rows={tableData} disease={selDisease} metric={selType}
+              {...(insights === true ? {} : insights)} />
+          )}
+
+          {loading || viewMode === 'table' ? null : (
 
             /* ── CHART ───────────────────────────────────────── */
             <div className="chart-wrapper">

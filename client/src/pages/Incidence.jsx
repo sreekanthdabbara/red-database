@@ -52,6 +52,7 @@ export default function Incidence() {
       title="Incidence"
       tableColumns={TABLE_COLUMNS}
       exportColumns={EXPORT_COLUMNS}
+      insights
     />
   );
 }

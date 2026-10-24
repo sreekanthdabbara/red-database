@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import api from '../api/axios';
 import MultiSelect from '../components/MultiSelect';
+import EpiInsights from '../components/EpiInsights';
 import './Survival.css';
 
 // Keep the current choice if the reloaded list still has it, else fall back to "All" ('')
@@ -173,7 +174,7 @@ export default function Survival() {
       'Study year', 'Specialty name', 'Specialty 1', 'Disease name',
       'Another name of disease', 'Synonym(s)', 'ICD code', 'Disease ICD code',
       'Disease definition', 'Gender type', 'Age', 'Race', 'Ethnicity',
-      'Survival type', 'Year of survival', 'Estimate',
+      'Survival type', 'Year of survival', 'Estimate', 'Epi value',
       'Study sample type', 'Study design', 'Data source type',
       'Reference', 'URL', 'Date of update',
     ];
@@ -200,12 +201,13 @@ export default function Survival() {
         r.survival_type || '',
         r.year_of_survival || '',
         r.estimate || '',
+        r.epi_value || '',
         `"${(r.study_sample_type || '').replace(/"/g, '""')}"`,
         `"${(r.study_design || '').replace(/"/g, '""')}"`,
         r.data_source_type || '',
         `"${(r.reference || '').replace(/"/g, '""')}"`,
         r.url || '',
-        r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
+        (r.date_of_update || r.created_at) ? new Date(r.date_of_update || r.created_at).toLocaleDateString() : '',
       ].join(','));
     });
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
@@ -332,7 +334,7 @@ export default function Survival() {
         </aside>
 
         {/* ── Main ──────────────────────────────────────────── */}
-        <div className="prev-main">
+        <div className={`prev-main${viewMode === 'table' ? ' has-insights' : ''}`}>
           <div className="view-toggle">
             <button className={`tb${viewMode === 'table' ? ' active' : ''}`}
               onClick={() => setViewMode('table')}>Table</button>
@@ -345,8 +347,8 @@ export default function Survival() {
           {loading ? (
             <div className="prev-loading"><div className="spinner" />Loading data…</div>
           ) : viewMode === 'table' ? (
-
-            /* ── TABLE — selected columns only ───────────────── */
+            <>
+            {/* ── TABLE — selected columns only ───────────────── */}
             <div className="table-wrapper">
               <table className="data-table">
                 <thead>
@@ -361,6 +363,7 @@ export default function Survival() {
                     <th>Survival Type</th>
                     <th>Year of Survival</th>
                     <th>Estimate</th>
+                    <th>Epi Value</th>
                     <th>Data Source</th>
                     <th>Reference</th>
                     <th>Date of Update</th>
@@ -369,7 +372,7 @@ export default function Survival() {
                 <tbody>
                   {tableData.length === 0 ? (
                     <tr>
-                      <td colSpan={13} className="no-data">
+                      <td colSpan={14} className="no-data">
                         No records match the selected filters.
                       </td>
                     </tr>
@@ -384,12 +387,13 @@ export default function Survival() {
                       <td className="disease-cell" title={row.disease_name}>{row.disease_name}</td>
                       <td title={row.survival_type}>{row.survival_type}</td>
                       <td title={row.year_of_survival}>{row.year_of_survival}</td>
-                      <td className="value-cell" title={row.estimate}>{row.estimate}</td>
+                      <td title={row.estimate}>{row.estimate}</td>
+                      <td className="value-cell" title={row.epi_value}>{row.epi_value}</td>
                       <td title={row.data_source_type}>{row.data_source_type}</td>
                       <td className="ref-cell" title={row.reference}>{row.reference}</td>
-                      <td title={row.created_at}>
-                        {row.created_at
-                          ? new Date(row.created_at).toLocaleDateString()
+                      <td title={row.date_of_update || row.created_at}>
+                        {(row.date_of_update || row.created_at)
+                          ? new Date(row.date_of_update || row.created_at).toLocaleDateString()
                           : ''}
                       </td>
                     </tr>
@@ -398,6 +402,13 @@ export default function Survival() {
               </table>
             </div>
 
+            <EpiInsights
+              rows={tableData}
+              disease={selDisease}
+              metric="Survival rate"
+              fields={{ metric: 'survival_type' }}
+            />
+            </>
           ) : (
 
             /* ── CHART ───────────────────────────────────────── */
