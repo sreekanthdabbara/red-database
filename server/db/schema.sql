@@ -22,28 +22,41 @@ INSERT IGNORE INTO users (name, email, password, role) VALUES
   ('Admin', 'admin@red.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
 
 -- ------------------------------------------------------------
--- Main epi data table — mirrors the Excel columns exactly
+-- Prevalence data (Prevalence page) — mirrors the Excel template columns
+-- Rows loaded by import_prevalence.js have source_file set
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS epi_data (
-  id                       INT AUTO_INCREMENT PRIMARY KEY,
-  country_area             VARCHAR(200) NOT NULL,
-  published_period         VARCHAR(20),
-  study_year               VARCHAR(30),
-  disease_name             VARCHAR(200) NOT NULL,
-  gender_type              VARCHAR(50),
-  age_group                TEXT,
-  race                     VARCHAR(200),
-  ethnicity                VARCHAR(200),
-  epi_metric               VARCHAR(300),
-  prevalence_estimate_text VARCHAR(300),
-  value_estimation         DECIMAL(12,4),
-  study_sample_size        TEXT,
-  study_design             VARCHAR(300),
-  reference                TEXT,
-  url                      TEXT,
-  created_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  country_area             VARCHAR(200) NOT NULL,
-  continent                VARCHAR(100)
+CREATE TABLE IF NOT EXISTS prevalence_data (
+  id int NOT NULL AUTO_INCREMENT,
+  region varchar(100) DEFAULT NULL,
+  sub_region varchar(100) DEFAULT NULL,
+  country_area varchar(200) NOT NULL,
+  continent varchar(100) DEFAULT NULL,
+  published_period varchar(20) DEFAULT NULL,
+  study_year varchar(30) DEFAULT NULL,
+  disease_name varchar(200) NOT NULL,
+  another_name varchar(200) DEFAULT NULL,
+  synonyms varchar(200) DEFAULT NULL,
+  icd_code varchar(50) DEFAULT NULL,
+  disease_icd_code varchar(50) DEFAULT NULL,
+  disease_definition text,
+  specialty varchar(100) DEFAULT NULL,
+  specialty_1 varchar(200) DEFAULT NULL,
+  gender_type varchar(50) DEFAULT NULL,
+  age_group text,
+  race varchar(200) DEFAULT NULL,
+  ethnicity varchar(200) DEFAULT NULL,
+  epi_metric varchar(300) DEFAULT NULL,
+  prevalence_estimate_text varchar(300) DEFAULT NULL,
+  value_estimation decimal(12,4) DEFAULT NULL,
+  study_sample_size text,
+  study_design varchar(300) DEFAULT NULL,
+  data_source_type varchar(200) DEFAULT NULL,
+  reference text,
+  url text,
+  date_of_update date DEFAULT NULL,
+  source_file varchar(200) DEFAULT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 );
 
 -- ------------------------------------------------------------
@@ -74,7 +87,7 @@ INSERT INTO definitions (term, definition, category) VALUES
 -- ============================================================
 -- SEED: all 40 rows from Sample_data.csv
 -- ============================================================
-INSERT INTO epi_data
+INSERT INTO prevalence_data
   (country_area,published_period,study_year,disease_name,gender_type,age_group,race,ethnicity,epi_metric,prevalence_estimate_text,value_estimation,study_sample_size,study_design,reference,url)
 VALUES
 ('Worldwide','2026','2015','Fabry disease','Both','Childhood to adulthood onset; birth prevalence summary','Pan-ethnic / not race-restricted','Global / not specified','Total prevalence','10 50 per 100,000',10.5,'Rare disease database summary','Database / disease page summary','Orphanet disease database entry for Fabry disease (ORPHA:324).','https://www.orpha.net/en/disease/detail/324'),
@@ -119,10 +132,10 @@ VALUES
 ('United Kingdom','1971','1951 1969','Achondroplasia','Both','Births / newborns','Not reported','UK births','Birth prevalence','4.9 per 100,000 births',4.9,'61,682 births and 3 achondroplasia cases in public summary listing','Birth prevalence estimate reported in public literature summary','Harris et al. (as listed in An Estimate of the Global Birth Prevalence of Achondroplasia public summary poster).','https://ascendispharma.com/wp-content/uploads/2020/09/Achondroplasia-Birth-Prevalance.pdf');
 
 
-UPDATE epi_data SET continent = 'Global'        WHERE country_area = 'Worldwide';
-UPDATE epi_data SET continent = 'Europe'        WHERE country_area IN ('France','Italy','Spain','Portugal','Denmark','United Kingdom','Europe','Germany');
-UPDATE epi_data SET continent = 'North America' WHERE country_area IN ('United States','United States (Missouri)','United States (Washington State)','United States (selected regions / 7 birth-defect monitoring programs)','Canada');
-UPDATE epi_data SET continent = 'Asia Pacific'  WHERE country_area IN ('Japan','China','Taiwan','India','Australia');
-UPDATE epi_data SET continent = 'Latin America' WHERE country_area IN ('Argentina','Brazil','South America (multi-country)');
-UPDATE epi_data SET continent = 'Middle East & Africa' WHERE country_area = 'South Africa';
+UPDATE prevalence_data SET continent = 'Global'        WHERE country_area = 'Worldwide';
+UPDATE prevalence_data SET continent = 'Europe'        WHERE country_area IN ('France','Italy','Spain','Portugal','Denmark','United Kingdom','Europe','Germany');
+UPDATE prevalence_data SET continent = 'North America' WHERE country_area IN ('United States','United States (Missouri)','United States (Washington State)','United States (selected regions / 7 birth-defect monitoring programs)','Canada');
+UPDATE prevalence_data SET continent = 'Asia Pacific'  WHERE country_area IN ('Japan','China','Taiwan','India','Australia');
+UPDATE prevalence_data SET continent = 'Latin America' WHERE country_area IN ('Argentina','Brazil','South America (multi-country)');
+UPDATE prevalence_data SET continent = 'Middle East & Africa' WHERE country_area = 'South Africa';
 

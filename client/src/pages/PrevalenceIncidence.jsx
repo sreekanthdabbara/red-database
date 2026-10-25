@@ -24,7 +24,7 @@ const cellText = (row, key) => {
 };
 
 // Table shows these; Download exports EXPORT_COLUMNS.
-// specialty_1 / data_source_type / date_of_update are not in epi_data yet —
+// specialty_1 / data_source_type / date_of_update are empty for older prevalence_data rows —
 // they show once the columns are added to the table.
 const TABLE_COLUMNS = [
   { label: 'Country / Area',      key: 'country_area', className: 'country-cell' },

@@ -6,7 +6,7 @@ const auth   = require('../middleware/auth');
 router.get('/', auth, async (req, res) => {
   const { disease, country, gender, epi_metric, year_from, year_to, search, continent, specialty } = req.query;
 
-  let sql = 'SELECT * FROM epi_data WHERE 1=1';
+  let sql = 'SELECT * FROM prevalence_data WHERE 1=1';
   const params = [];
 
   if (specialty)  { sql += ' AND specialty = ?';                           params.push(specialty); }
@@ -39,7 +39,7 @@ router.get('/chart/by-country', auth, async (req, res) => {
   let sql = `
     SELECT country_area, published_period, epi_metric,
            MAX(value_estimation) AS estimate
-    FROM epi_data WHERE value_estimation IS NOT NULL
+    FROM prevalence_data WHERE value_estimation IS NOT NULL
   `;
   const params = [];
   if (specialty)  { sql += ' AND specialty = ?';      params.push(specialty); }
@@ -62,7 +62,7 @@ router.get('/chart/by-country', auth, async (req, res) => {
 router.get('/specialties', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT DISTINCT specialty FROM epi_data WHERE specialty IS NOT NULL ORDER BY specialty'
+      'SELECT DISTINCT specialty FROM prevalence_data WHERE specialty IS NOT NULL ORDER BY specialty'
     );
     res.json(rows.map(r => r.specialty));
   } catch (err) {
@@ -73,7 +73,7 @@ router.get('/specialties', auth, async (req, res) => {
 // ── GET /api/epi/diseases?specialty=X&continent=Y ─────────────
 router.get('/diseases', auth, async (req, res) => {
   const { continent, specialty } = req.query;
-  let sql = 'SELECT DISTINCT disease_name FROM epi_data WHERE 1=1';
+  let sql = 'SELECT DISTINCT disease_name FROM prevalence_data WHERE 1=1';
   const params = [];
   if (continent) { sql += ' AND continent = ?';  params.push(continent); }
   if (specialty) { sql += ' AND specialty = ?';  params.push(specialty); }
@@ -89,7 +89,7 @@ router.get('/diseases', auth, async (req, res) => {
 // ── GET /api/epi/countries?disease=X&continent=Y ──────────────
 router.get('/countries', auth, async (req, res) => {
   const { continent, disease } = req.query;
-  let sql = 'SELECT DISTINCT country_area FROM epi_data WHERE 1=1';
+  let sql = 'SELECT DISTINCT country_area FROM prevalence_data WHERE 1=1';
   const params = [];
   if (continent) { sql += ' AND continent = ?';    params.push(continent); }
   if (disease)   { sql += ' AND disease_name = ?'; params.push(disease); }
@@ -105,7 +105,7 @@ router.get('/countries', auth, async (req, res) => {
 // ── GET /api/epi/metrics?country=X&disease=Y ──────────────────
 router.get('/metrics', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
-  let sql = 'SELECT DISTINCT epi_metric FROM epi_data WHERE 1=1';
+  let sql = 'SELECT DISTINCT epi_metric FROM prevalence_data WHERE 1=1';
   const params = [];
   if (country)   { sql += ' AND country_area IN (?)';  params.push([].concat(country)); }
   if (continent) { sql += ' AND continent = ?';     params.push(continent); }
@@ -122,7 +122,7 @@ router.get('/metrics', auth, async (req, res) => {
 // ── GET /api/epi/genders?country=X&disease=Y ──────────────────
 router.get('/genders', auth, async (req, res) => {
   const { country, continent, disease } = req.query;
-  let sql = 'SELECT DISTINCT gender_type FROM epi_data WHERE 1=1';
+  let sql = 'SELECT DISTINCT gender_type FROM prevalence_data WHERE 1=1';
   const params = [];
   if (country)   { sql += ' AND country_area IN (?)';  params.push([].concat(country)); }
   if (continent) { sql += ' AND continent = ?';     params.push(continent); }
@@ -140,7 +140,7 @@ router.get('/genders', auth, async (req, res) => {
 router.get('/filter-options', auth, async (req, res) => {
   try {
     const [[continents]] = await Promise.all([
-      db.query('SELECT DISTINCT continent FROM epi_data WHERE continent IS NOT NULL ORDER BY continent'),
+      db.query('SELECT DISTINCT continent FROM prevalence_data WHERE continent IS NOT NULL ORDER BY continent'),
     ]);
     res.json({
       continents: continents.map(r => r.continent),

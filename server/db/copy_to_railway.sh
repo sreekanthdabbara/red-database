@@ -3,6 +3,10 @@
 # Copy the local red_database into Railway's MySQL
 # Usage (from the repo root):
 #   bash server/db/copy_to_railway.sh "<MYSQL_PUBLIC_URL from Railway>"
+#   bash server/db/copy_to_railway.sh "<MYSQL_PUBLIC_URL>" --with-users
+#
+# By default the users table is NOT copied, so accounts created on the live
+# site are kept. Add --with-users only for a first-time setup.
 #
 # MYSQL_PUBLIC_URL is on the Railway MySQL service → Variables tab,
 # e.g. mysql://root:xxxx@xxxx.proxy.rlwy.net:12345/railway
@@ -11,6 +15,7 @@
 set -euo pipefail
 
 URL="${1:-}"
+WITH_USERS="${2:-}"
 if [[ ! "$URL" =~ ^mysql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/(.+)$ ]]; then
   echo "Usage: bash server/db/copy_to_railway.sh \"mysql://user:pass@host:port/db\""
   exit 1
@@ -22,11 +27,16 @@ R_HOST="${BASH_REMATCH[3]}"; R_PORT="${BASH_REMATCH[4]}"; R_DB="${BASH_REMATCH[5
 set -a; source "$(dirname "$0")/../.env"; set +a
 
 DUMP="deploy_dump.sql"   # git-ignored
+SKIP=()
+if [[ "$WITH_USERS" != "--with-users" ]]; then
+  SKIP=(--ignore-table="${DB_NAME:-red_database}.users")
+  echo "👤 Keeping Railway's users table (accounts created on the live site are not touched)"
+fi
 echo "📤 Dumping local ${DB_NAME:-red_database}…"
 MYSQL_PWD="${DB_PASSWORD:-}" mysqldump \
   -h "${DB_HOST:-localhost}" -P "${DB_PORT:-3306}" -u "${DB_USER:-root}" \
   --single-transaction --no-tablespaces --set-gtid-purged=OFF \
-  "${DB_NAME:-red_database}" > "$DUMP"
+  ${SKIP[@]+"${SKIP[@]}"} "${DB_NAME:-red_database}" > "$DUMP"
 echo "   $(du -h "$DUMP" | cut -f1) written to $DUMP"
 
 echo "📥 Loading into Railway ($R_HOST:$R_PORT/$R_DB)…"
@@ -34,7 +44,7 @@ MYSQL_PWD="$R_PASS" mysql -h "$R_HOST" -P "$R_PORT" -u "$R_USER" "$R_DB" < "$DUM
 
 echo "🔎 Row counts on Railway:"
 MYSQL_PWD="$R_PASS" mysql -h "$R_HOST" -P "$R_PORT" -u "$R_USER" "$R_DB" -e "
-  SELECT 'epi_data' t, COUNT(*) n FROM epi_data UNION ALL
+  SELECT 'prevalence_data' t, COUNT(*) n FROM prevalence_data UNION ALL
   SELECT 'survival_data', COUNT(*) FROM survival_data UNION ALL
   SELECT 'genetic_testing_data', COUNT(*) FROM genetic_testing_data UNION ALL
   SELECT 'mortality_data', COUNT(*) FROM mortality_data UNION ALL

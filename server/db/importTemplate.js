@@ -32,7 +32,9 @@ const cellValue = (v) => {
 
 // columns: { normalized header → db column }
 // fixRow:  optional (record) → record, to repair known sheet issues per row
-async function importTemplate({ file, table, columns, fixRow = r => r }) {
+// source:  optional tag stored in source_file; when set, only rows with that tag
+//          are replaced, and other rows in the table are left untouched
+async function importTemplate({ file, table, columns, fixRow = r => r, source = null }) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(path.resolve(file));
   const ws = wb.getWorksheet('Template');
@@ -52,14 +54,18 @@ async function importTemplate({ file, table, columns, fixRow = r => r }) {
     Object.entries(colMap).forEach(([i, col]) => {
       record[col] = cellValue(ws.getRow(r).getCell(+i).value);
     });
-    if (record.country_area) rows.push(fixRow(record));
+    if (record.country_area) rows.push({ ...fixRow(record), ...(source && { source_file: source }) });
   }
+
+  // Limit the replace and the region/continent updates to this sheet's rows
+  const scope  = source ? ' AND source_file = ?' : '';
+  const sParam = source ? [source] : [];
 
   const cols = [...new Set(rows.flatMap(Object.keys))];
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    await conn.query(`DELETE FROM ${table}`);
+    await conn.query(`DELETE FROM ${table} WHERE 1=1${scope}`, sParam);
     if (rows.length) {
       await conn.query(
         `INSERT INTO ${table} (${cols.join(', ')}) VALUES ?`,
@@ -72,7 +78,7 @@ async function importTemplate({ file, table, columns, fixRow = r => r }) {
       JOIN (SELECT country, MAX(region) AS region, MAX(sub_region) AS sub_region
             FROM population_growth GROUP BY country) p ON p.country = t.country_area
       SET t.region = p.region, t.sub_region = p.sub_region
-      WHERE t.region IS NULL`);
+      WHERE t.region IS NULL${scope.replace('source_file', 't.source_file')}`, sParam);
 
     // Map continents (same rules as survival_data)
     await conn.query(`UPDATE ${table} SET continent = CASE
@@ -82,7 +88,8 @@ async function importTemplate({ file, table, columns, fixRow = r => r }) {
       WHEN region = 'Americas' AND sub_region IN ('North America', 'Caribbean', 'Central America') THEN 'North America'
       WHEN region = 'Americas' AND sub_region = 'South America' THEN 'Latin America'
       WHEN region IN ('MENA', 'SSA') THEN 'Middle East & Africa'
-    END`);
+    END
+    WHERE 1=1${scope}`, sParam);
 
     await conn.commit();
     console.log(`✅ Imported ${rows.length} rows into ${table}`);
@@ -96,10 +103,12 @@ async function importTemplate({ file, table, columns, fixRow = r => r }) {
 
 // Shared CLI wrapper for the import_*.js scripts.
 // File defaults to ~/Documents/REED Data/<defaultName> when no path is given.
-importTemplate.run = (table, columns, defaultName, fixRow) => {
+// options: a fixRow function, or { fixRow, source }
+importTemplate.run = (table, columns, defaultName, options = {}) => {
+  const opts = typeof options === 'function' ? { fixRow: options } : options;
   const file = process.argv[2] || path.join(os.homedir(), 'Documents', 'REED Data', defaultName);
   console.log(`📄 Reading ${file}`);
-  importTemplate({ file, table, columns, fixRow })
+  importTemplate({ file, table, columns, ...opts })
     .then(() => process.exit(0))
     .catch(err => {
       console.error('❌ Import failed:', err.message);
